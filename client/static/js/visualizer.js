@@ -253,6 +253,10 @@ function drawYAxisLabels(ctx, canvas, type) {
 
 async function startStream() {
     try {
+        const historyDiv = document.getElementById('transcript-history');
+        const partialDiv = document.getElementById('partial-result');
+        if (historyDiv) historyDiv.innerHTML = '';
+        if (partialDiv) partialDiv.textContent = '';
         const stream = await navigator.mediaDevices.getUserMedia({ 
             audio: {
                 noiseSuppression: false,
@@ -262,6 +266,7 @@ async function startStream() {
         });
         
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
         analyser = audioContext.createAnalyser();
         microphone = audioContext.createMediaStreamSource(stream);
         
@@ -275,16 +280,36 @@ async function startStream() {
         
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            if (data.text) {
-                // If it's a final result, we could append it. 
-                // For now, we just show the latest message.
-                transcriptionDiv.textContent = data.text;
-                transcriptionDiv.scrollTop = transcriptionDiv.scrollHeight;
+            const historyDiv = document.getElementById('transcript-history');
+            const partialDiv = document.getElementById('partial-result');
+
+            if (data.is_final) {
+                // Remove the partial text when a final arrives (it might be the same content)
+                partialDiv.textContent = '';
+
+                const segment = document.createElement('div');
+                segment.className = 'transcript-segment';
+                
+                const seconds = Math.floor(data.start_time);
+                const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+                const ss = String(seconds % 60).padStart(2, '0');
+                const timestamp = `[${mm}:${ss}]`;
+                
+                segment.innerHTML = `<span class="timestamp">${timestamp}</span>${data.text}`;
+                historyDiv.appendChild(segment);
+            } else {
+                // Update the ephemeral partial area
+                partialDiv.textContent = data.text;
             }
+
+            // Keep the scroll at the bottom
+            transcriptionDiv.scrollTop = transcriptionDiv.scrollHeight;
         };
 
         socket.onopen = () => {
             console.log('WebSocket connected');
+            // Send initial configuration
+            socket.send(JSON.stringify({ sample_rate: audioContext.sampleRate }));
         };
 
         socket.onclose = () => {

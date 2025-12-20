@@ -36,9 +36,20 @@ async def websocket_endpoint(websocket: WebSocket):
         
         async def request_generator():
             try:
+                # First message should be a JSON with sample_rate
+                msg = await websocket.receive_text()
+                import json
+                try:
+                    init_data = json.loads(msg)
+                    sample_rate = init_data.get("sample_rate", 16000)
+                except:
+                    sample_rate = 16000
+                
+                logging.info(f"WebSocket input sample rate: {sample_rate}")
+                
                 while True:
                     data = await websocket.receive_bytes()
-                    yield transcription_pb2.AudioChunk(data=data)
+                    yield transcription_pb2.AudioChunk(data=data, sample_rate=int(sample_rate))
             except WebSocketDisconnect:
                 pass
             except Exception as e:
@@ -49,7 +60,8 @@ async def websocket_endpoint(websocket: WebSocket):
             async for response in responses:
                 await websocket.send_json({
                     "text": response.text,
-                    "is_final": response.is_final
+                    "is_final": response.is_final,
+                    "start_time": response.start_time
                 })
         except grpc.RpcError as e:
             logging.error(f"gRPC error: {e}")

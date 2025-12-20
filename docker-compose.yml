@@ -5,6 +5,15 @@ services:
       dockerfile: server/Dockerfile
     ports:
       - "50051:50051"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    volumes:
+      - ./recordings:/app/recordings
     develop:
       watch:
         - action: sync+restart

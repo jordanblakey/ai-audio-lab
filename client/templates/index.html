@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>gRPC Transcription Client</title>
+    <title>gRPC Whisper Transcription Client</title>
     <script src="https://unpkg.com/htmx.org@2.0.3"></script>
     <style>
         body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
@@ -32,17 +32,28 @@
             font-size: 1.1em;
             line-height: 1.5;
         }
-        .live-label {
-            font-size: 0.8em;
-            color: #666;
-            margin-bottom: 5px;
-            display: block;
+        .transcript-segment {
+            /* margin-bottom: 8px;
+            padding-bottom: 4px; */
+            border-bottom: 1px solid #f9f9f9;
+        }
+        .timestamp {
+            font-family: monospace;
+            color: #888;
+            margin-right: 8px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        #partial-result {
+            color: #888;
+            font-style: italic;
+            margin-top: 8px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>gRPC Transcription Client</h1>
+        <h1>gRPC Whisper Transcription Client</h1>
         
         <div id="audio-controls">
             <h3>Audio Stream</h3>
@@ -61,7 +72,10 @@
             </div>
             <div id="transcription-container" style="margin-top: 20px; text-align: left;">
                 <span class="live-label">Live Transcription:</span>
-                <div id="transcription"></div>
+                <div id="transcription">
+                    <div id="transcript-history"></div>
+                    <div id="partial-result"></div>
+                </div>
             </div>
         </div>
 

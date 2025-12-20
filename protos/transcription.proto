@@ -8,8 +8,10 @@ service WhisperTranscriber {
 }
 
 message AudioChunk {
-  // Raw PCM audio data (floats or shorts, depending on implementation).
+  // Raw PCM audio data as float32.
   bytes data = 1;
+  // Sample rate of the provided audio.
+  int32 sample_rate = 2;
 }
 
 message TranscriptionResult {
@@ -17,4 +19,6 @@ message TranscriptionResult {
   string text = 1;
   // Whether this is a final result for this segment.
   bool is_final = 2;
+  // Start time of the segment in seconds, relative to the stream start.
+  float start_time = 3;
 }

@@ -3,3 +3,4 @@ __pycache__
 generated
 grpc/
 *_pb2*
+recordings

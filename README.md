@@ -14,6 +14,8 @@ graph LR
     B -- "WebSocket (JSON)" --> A
 ```
 
+![Architecture](docs/screenshot.png)
+
 ## Audio Troubleshooting Links
 
 - [20 - 20,000 Hz Audio Sweep](https://www.youtube.com/watch?v=PAsMlDptjx8)
