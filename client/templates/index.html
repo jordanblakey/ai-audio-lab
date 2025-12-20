@@ -72,6 +72,10 @@
         let microphone;
         let animationId;
         let isStreaming = false;
+        
+        // Pre-allocate buffers to avoid Garbage Collection inside drawVisualizer
+        let freqData;
+        let timeDataFloat;
 
         let dpr = window.devicePixelRatio || 1;
         let logicalWidth, logicalHeight;
@@ -142,17 +146,49 @@
             waveCtx.lineWidth = 1.5;
             waveCtx.strokeStyle = '#00ff00'; 
             waveCtx.beginPath();
+
+            // --- Oscilloscope Triggering (DC-Offset Aware) ---
+            // Calculate mean of the ENTIRE buffer for maximum stability
+            let sum = 0;
+            for (let i = 0; i < bufferLength; i++) sum += timeData[i];
+            const mean = sum / bufferLength;
+
+            const plotLength = 1000; 
+            let offset = 0;
             
-            const sliceWidth = w * 1.0 / bufferLength;
+            for (let i = 0; i < bufferLength - plotLength; i++) {
+                // Find transition across the mean
+                if (timeData[i] < mean && timeData[i+1] >= mean) {
+                    offset = i;
+                    break;
+                }
+            }
+            
+            // Calculate peak amplitude in this window for auto-scaling
+            let peak = 0;
+            for (let i = 0; i < plotLength; i++) {
+                const amp = Math.abs(timeData[offset + i] - mean);
+                if (amp > peak) peak = amp;
+            }
+
+            // Auto-scale: We want peak to reach ~80% of h/2 (0.4 of h)
+            // but we cap the gain so we don't amplify noise floor too much
+            const targetPeak = 0.8;
+            const maxGain = 20.0; // Don't scale up more than 20x
+            const gain = Math.min(maxGain, targetPeak / (peak || 0.01));
+
+            const sliceWidth = w * 1.0 / plotLength;
             let x = 0;
-            for (let i = 0; i < bufferLength; i++) {
-                const v = timeData[i] / 128.0;
-                const y = v * h / 2;
-                if (i === 0) waveCtx.moveTo(x, y);
+            waveCtx.beginPath();
+            for (let i = 0; i < plotLength; i++) {
+                const idx = offset + i;
+                const v = (timeData[idx] - mean) * gain; 
+                const y = (h / 2) + (v * (h / 2)); 
+                
+                if (idx === offset) waveCtx.moveTo(x, y);
                 else waveCtx.lineTo(x, y);
                 x += sliceWidth;
             }
-            waveCtx.lineTo(w, h/2);
             waveCtx.stroke();
         }
 
@@ -217,18 +253,18 @@
             animationId = requestAnimationFrame(drawVisualizer);
 
             const bufferLength = analyser.frequencyBinCount;
-            const freqData = new Uint8Array(bufferLength);
-            analyser.getByteFrequencyData(freqData);
+            const timeBufferLength = analyser.fftSize;
             
-            const timeData = new Uint8Array(bufferLength);
-            analyser.getByteTimeDomainData(timeData);
+            // Use pre-allocated buffers
+            analyser.getByteFrequencyData(freqData);
+            analyser.getFloatTimeDomainData(timeDataFloat);
 
             const sampleRate = audioContext.sampleRate;
             const logMin = Math.log10(minFreq);
             const logMax = Math.log10(maxFreq);
             const logRange = logMax - logMin;
 
-            renderWaveformFrame(waveCtx, timeData, bufferLength);
+            renderWaveformFrame(waveCtx, timeDataFloat, timeBufferLength);
             renderSpectrumFrame(freqCtx, freqData, audioContext, logMin, logMax, logRange, sampleRate);
             renderSpectrogramFrame(specCtx,freqData, logMin, logMax, logRange, sampleRate);
             
@@ -241,7 +277,7 @@
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     audio: {
-                        noiseSuppression: true,
+                        noiseSuppression: false, // this messes with the waveform... but without it, the signal is very noisy
                         echoCancellation: false,
                         autoGainControl: false
                     } 
@@ -252,9 +288,12 @@
                 microphone = audioContext.createMediaStreamSource(stream);
                 
                 microphone.connect(analyser);
-                analyser.fftSize = 16384; // Max resolution for best bass accuracy
-                analyser.frequencyBinCount = 16384;
-                analyser.smoothingTimeConstant = 0; // No time smoothing, exact tracking
+                analyser.fftSize = 16384; 
+                analyser.smoothingTimeConstant = 0;
+
+                // Initialize buffers after analyser is configured
+                freqData = new Uint8Array(analyser.frequencyBinCount);
+                timeDataFloat = new Float32Array(analyser.fftSize); // Fix: use fftSize for time domain
 
                 isStreaming = true;
                 audioToggleBtn.textContent = 'Stop Streaming';
