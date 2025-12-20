@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package transcription;
+
+service WhisperTranscriber {
+  // Streams audio chunks to the server and receives transcription results back.
+  rpc StreamTranscription (stream AudioChunk) returns (stream TranscriptionResult) {}
+}
+
+message AudioChunk {
+  // Raw PCM audio data (floats or shorts, depending on implementation).
+  bytes data = 1;
+}
+
+message TranscriptionResult {
+  // The transcribed text.
+  string text = 1;
+  // Whether this is a final result for this segment.
+  bool is_final = 2;
+}

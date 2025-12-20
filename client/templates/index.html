@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>gRPC Transcription Client</title>
+    <script src="https://unpkg.com/htmx.org@2.0.3"></script>
     <style>
         body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
         .container { border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
@@ -18,6 +19,25 @@
         #spectrogram-container { height: 200px; }
         .active { background-color: #dc3545; }
         .active:hover { background-color: #c82333; }
+        #transcription {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 50px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 1.1em;
+            line-height: 1.5;
+        }
+        .live-label {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 5px;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -39,17 +59,12 @@
                 <canvas id="spectrogram"></canvas>
                 <canvas id="spectrogram-ui" class="overlay"></canvas>
             </div>
+            <div id="transcription-container" style="margin-top: 20px; text-align: left;">
+                <span class="live-label">Live Transcription:</span>
+                <div id="transcription"></div>
+            </div>
         </div>
 
-        <form action="/send" method="post" style="margin-top: 20px;">
-            <input type="text" name="name" placeholder="Enter your name" required>
-            <button type="submit">Send</button>
-        </form>
-        {% if response %}
-        <div class="response">
-            <strong>Server Response:</strong> {{ response }}
-        </div>
-        {% endif %}
     </div>
     </div>
     <script src="/static/js/visualizer.js"></script>

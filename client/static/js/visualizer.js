@@ -18,6 +18,8 @@ let analyser;
 let microphone;
 let animationId;
 let isStreaming = false;
+let socket;
+const transcriptionDiv = document.getElementById('transcription');
 
 // Pre-allocate buffers to avoid Garbage Collection inside drawVisualizer
 let freqData;
@@ -267,9 +269,45 @@ async function startStream() {
         analyser.fftSize = 16384; 
         analyser.smoothingTimeConstant = 0;
 
+        // Initialize WebSocket
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        socket = new WebSocket(`${protocol}//${window.location.host}/ws/audio`);
+        
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.text) {
+                // If it's a final result, we could append it. 
+                // For now, we just show the latest message.
+                transcriptionDiv.textContent = data.text;
+                transcriptionDiv.scrollTop = transcriptionDiv.scrollHeight;
+            }
+        };
+
+        socket.onopen = () => {
+            console.log('WebSocket connected');
+        };
+
+        socket.onclose = () => {
+            console.log('WebSocket disconnected');
+        };
+
+        // Load AudioWorklet processor
+        await audioContext.audioWorklet.addModule('/static/js/audio-processor.js');
+        const processor = new AudioWorkletNode(audioContext, 'audio-processor');
+        
+        microphone.connect(processor);
+        processor.connect(audioContext.destination);
+
+        processor.port.onmessage = (event) => {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                const inputData = event.data; // This is the Float32Array from the worklet
+                socket.send(inputData.buffer);
+            }
+        };
+
         // Initialize buffers after analyser is configured
         freqData = new Uint8Array(analyser.frequencyBinCount);
-        timeDataFloat = new Float32Array(analyser.fftSize); // Fix: use fftSize for time domain
+        timeDataFloat = new Float32Array(analyser.fftSize); 
 
         isStreaming = true;
         audioToggleBtn.textContent = 'Stop Streaming';
@@ -278,6 +316,7 @@ async function startStream() {
         drawVisualizer();
 
         audioToggleBtn.stream = stream;
+        audioToggleBtn.processor = processor;
 
     } catch (err) {
         console.error('Error accessing microphone:', err);
@@ -289,6 +328,16 @@ function stopStream() {
     if (audioToggleBtn.stream) {
         audioToggleBtn.stream.getTracks().forEach(track => track.stop());
         audioToggleBtn.stream = null;
+    }
+
+    if (audioToggleBtn.processor) {
+        audioToggleBtn.processor.disconnect();
+        audioToggleBtn.processor = null;
+    }
+    
+    if (socket) {
+        socket.close();
+        socket = null;
     }
     
     if (audioContext) {
