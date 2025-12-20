@@ -26,3 +26,13 @@ docker-build: ## Build Docker images
 docker-system-prune: ## Prune all unused Docker objects
 	@echo "Pruning Docker..."
 	docker system prune -a --volumes --force
+
+watch: ## Watch for changes and rebuild
+	@echo "Watching for changes..."
+	docker compose watch
+
+logs: ## Tail logs for all containers
+	docker compose logs -f
+
+down: ## Stop and remove containers, networks, volumes, and images
+	docker compose down

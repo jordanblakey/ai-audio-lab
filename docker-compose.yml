@@ -5,6 +5,16 @@ services:
       dockerfile: server/Dockerfile
     ports:
       - "50051:50051"
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./server
+          target: /app/server
+        - action: sync+restart
+          path: ./protos
+          target: /app/protos
+        - action: rebuild
+          path: ./requirements.txt
 
   client:
     build:
@@ -16,3 +26,13 @@ services:
       - "8080:8080"
     depends_on:
       - server
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./client
+          target: /app/client
+        - action: sync+restart
+          path: ./protos
+          target: /app/protos
+        - action: rebuild
+          path: ./requirements.txt
