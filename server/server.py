@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from signal import SIGINT, SIGTERM
 
 import grpc
 from protos import helloworld_pb2
@@ -18,6 +19,18 @@ async def serve():
     server.add_insecure_port("[::]:" + port)
     await server.start()
     print("server started on " + port)
+
+    async def server_graceful_shutdown():
+        print("Starting graceful shutdown...")
+        await server.stop(5)
+
+    loop = asyncio.get_running_loop()
+    for signal in (SIGINT, SIGTERM):
+        loop.add_signal_handler(
+            signal,
+            lambda: asyncio.create_task(server_graceful_shutdown()),
+        )
+
     await server.wait_for_termination()
 
 
