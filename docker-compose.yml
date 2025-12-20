@@ -12,5 +12,7 @@ services:
       dockerfile: client/Dockerfile
     environment:
       - SERVER_ADDRESS=server:50051
+    ports:
+      - "8080:8080"
     depends_on:
       - server

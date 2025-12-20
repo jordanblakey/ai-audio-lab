@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>gRPC Chat</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+        .container { border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
+        input[type="text"] { padding: 8px; width: 70%; }
+        button { padding: 8px 16px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .response { margin-top: 20px; padding: 10px; background-color: #f0f0f0; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>gRPC Chat Client</h1>
+        <form action="/send" method="post">
+            <input type="text" name="name" placeholder="Enter your name" required>
+            <button type="submit">Send</button>
+        </form>
+        {% if response %}
+        <div class="response">
+            <strong>Server Response:</strong> {{ response }}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

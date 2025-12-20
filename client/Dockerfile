@@ -12,4 +12,6 @@ COPY client/ client/
 # Copy protos package (contains both .proto and generated files now)
 COPY protos/ protos/
 
+EXPOSE 8080
+
 CMD ["python", "client/client.py"]
