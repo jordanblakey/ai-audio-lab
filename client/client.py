@@ -6,11 +6,14 @@ import grpc
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 
 from protos import helloworld_pb2, helloworld_pb2_grpc
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="client/static"), name="static")
 templates = Jinja2Templates(directory="client/templates")
+
 
 # Configure gRPC connection
 target = os.environ.get("SERVER_ADDRESS", "server:50051")
