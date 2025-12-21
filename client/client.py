@@ -18,14 +18,9 @@ templates = Jinja2Templates(directory="client/templates")
 # Configure gRPC connection
 target = os.environ.get("SERVER_ADDRESS", "server:50051")
 
-
-
-
-
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
-
 
 @app.websocket("/ws/audio")
 async def websocket_endpoint(websocket: WebSocket):
@@ -79,6 +74,9 @@ async def websocket_endpoint(websocket: WebSocket):
             except:
                 pass
 
+@app.get("/recorder", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse("recorder.html", {"request": request})
 
 if __name__ == "__main__":
     import uvicorn
