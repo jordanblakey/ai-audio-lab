@@ -21,6 +21,22 @@ class WaveformDisplay {
 
         this.resize();
         window.addEventListener('resize', () => this.resize());
+        
+        // Click to seek
+        this.canvas.addEventListener('click', e => {
+            if (this.isLive || !this.staticBuffer || !this.audioElement) return;
+            
+            const rect = this.canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const progress = x / rect.width;
+            
+            const duration = this.staticBuffer.duration;
+            if (Number.isFinite(duration)) {
+                this.audioElement.currentTime = progress * duration;
+                // Redraw immediately for responsiveness
+                this.drawStatic();
+            }
+        });
     }
 
     resize() {
@@ -54,6 +70,17 @@ class WaveformDisplay {
         this.staticBuffer = audioBuffer;
         this.audioElement = null; // Clear old audio element to prevent stale playhead
         this.drawStatic();
+    }
+
+    clear() {
+        this.stopLoop();
+        this.isLive = false;
+        this.analyser = null;
+        this.staticBuffer = null;
+        this.audioElement = null;
+        this.peaks = [];
+        this.ctx.fillStyle = this.fillStyle;
+        this.ctx.fillRect(0, 0, this.width, this.height);
     }
 
     bindAudio(audioElement) {
@@ -138,7 +165,7 @@ class WaveformDisplay {
             for (let i = 0; i < totalPeaks; i++) {
                 const x = i * barWidth;
                 const amp = this.peaks[i];
-                const barHeight = amp * this.height;
+                const barHeight = Math.max(1, amp * this.height);
                 const y = (this.height - barHeight) / 2;
                 this.ctx.fillRect(x, y, Math.max(1, barWidth - 0.5), barHeight); 
             }
@@ -155,7 +182,7 @@ class WaveformDisplay {
                     if (this.peaks[j] > maxAmp) maxAmp = this.peaks[j];
                 }
                 
-                const barHeight = maxAmp * this.height;
+                const barHeight = Math.max(1, maxAmp * this.height);
                 const y = (this.height - barHeight) / 2;
                 this.ctx.fillRect(x, y, 1, barHeight);
             }
@@ -185,7 +212,7 @@ class WaveformDisplay {
                 if (datum > maxAmp) maxAmp = datum;
             }
             
-            const barHeight = maxAmp * this.height;
+            const barHeight = Math.max(1, maxAmp * this.height);
             const y = (this.height - barHeight) / 2;
             this.ctx.fillRect(i, y, 1, barHeight);
         }
@@ -193,13 +220,23 @@ class WaveformDisplay {
 
         // Draw Playhead
         if (this.audioElement) {
-            const duration = this.staticBuffer ? this.staticBuffer.duration : this.audioElement.duration;
-            const progress = this.audioElement.currentTime / duration;
+            // Use element's duration if valid to ensure progress matches currentTime/duration ratio exactly
+            // Fallback to buffer duration (fixing Infinity issue)
+            const duration = Number.isFinite(this.audioElement.duration) ? this.audioElement.duration : 
+                           (this.staticBuffer ? this.staticBuffer.duration : 0);
+            
+            let progress = this.audioElement.currentTime / duration;
+            
+            // Force full width if ended (handles browser precision mismatches)
+            if (this.audioElement.ended) {
+                progress = 1;
+            }
+
             // Guard against NaN or Infinity
             const cleanProgress = Number.isFinite(progress) ? progress : 0;
             const x = cleanProgress * this.width;
             
-            this.ctx.strokeStyle = '#ffffff';
+            this.ctx.strokeStyle =  '#ff0000';
             this.ctx.lineWidth = 2;
             this.ctx.beginPath();
             this.ctx.moveTo(x, 0);
