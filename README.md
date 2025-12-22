@@ -1,6 +1,7 @@
 # gRPC Streaming Audio Transcription
 
 This project demonstrates real-time audio streaming from a browser to a gRPC server for transcription (e.g., using OpenAI Whisper).
+Recorded UI demonstration: https://youtu.be/2xyq0HK2D14
 
 ## Architecture
 
