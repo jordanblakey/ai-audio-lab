@@ -5,7 +5,7 @@ import scipy.signal
 import pyaudio
 
 from audio_modules import narrate, Wave, Audio
-from audio_modules.effects import amplitude_envelope 
+from audio_modules.effects import fade 
 
 with Audio() as a:
     narrate("This is a 440 hertz sine wave.")

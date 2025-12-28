@@ -48,7 +48,7 @@ for name, weights in remixes.items():
         else:
             mixed_tensor += voice_tensor * weight
     
-    torch.save(mixed_tensor, f'voices/{name}.pt')
+    torch.save(mixed_tensor, f'generated_audio/kokoro_82m_weighted_blends/{name}.pt')
 
 # 4. Generate
 text = "The sixth sick sheik's sixth sheep's sick."

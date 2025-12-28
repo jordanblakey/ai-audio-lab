@@ -5,6 +5,8 @@ import sys
 import sounddevice as sd
 import time
 from kokoro_onnx import Kokoro
+from typing import Tuple
+import numpy as np
 
 os.environ["ORT_LOGGING_LEVEL"] = "3"
 import onnxruntime as ort
@@ -51,7 +53,7 @@ async def _warmup():
     async for _ in stream:
         pass
 
-async def _async_narrate(text: str, voice: str = "am_fenrir"):
+async def _async_narrate(text: str, voice: str = "am_fenrir", play: bool = True) -> Tuple[np.ndarray, int]:
     engine = get_engine()
     
     # 1. Start the timer immediately before inference
@@ -68,11 +70,13 @@ async def _async_narrate(text: str, voice: str = "am_fenrir"):
             # print(f"DEBUG: Time to First Audio: {latency_ms:.2f}ms")
             first_chunk = False
             
-        sd.play(samples, sample_rate)
-        sd.wait()
+        if play:
+            sd.play(samples, sample_rate)
+            sd.wait()
+        return samples, sample_rate
 # --- Public API for other files ---
 
-def narrate(text: str, voice: str = "am_fenrir"):
+def narrate(text: str, voice: str = "am_fenrir", play: bool = True):
     """
     The main entry point for other scripts. 
     Handles the event loop automatically.
@@ -85,10 +89,10 @@ def narrate(text: str, voice: str = "am_fenrir"):
 
     if loop and loop.is_running():
         # If we are already inside an async app (like a FastAPI server or Bot)
-        return loop.create_task(_async_narrate(text, voice))
+        return loop.create_task(_async_narrate(text, voice, play))
     else:
         # For standard synchronous scripts
-        return asyncio.run(_async_narrate(text, voice))
+        return asyncio.run(_async_narrate(text, voice, play))
 
 @contextlib.contextmanager
 def silence_stderr():

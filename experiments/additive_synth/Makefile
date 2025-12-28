@@ -9,3 +9,6 @@ play:
 	python 03_intervals.py
 	python 04_amplitude_envelope.py
 	python 05_noise.py
+	python 06_chords.py
+	python 07_scales.py
+	python 08_effects.py

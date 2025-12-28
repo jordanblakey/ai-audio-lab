@@ -1,5 +1,5 @@
 import numpy as np
-from audio_modules.effects import amplitude_envelope
+from audio_modules.effects import fade
 from audio_modules.easings import EasingType
 
 SAMPLE_RATE = 48000
@@ -10,11 +10,21 @@ class Noise:
         self.amp = amp
         self.duration = duration
         self.t = np.linspace(0, duration, int(SAMPLE_RATE * duration), endpoint=False)
-        self.n_samples = len(self.t)
+
+    def __str__(self):
+        return f"Noise(amp={self.amp}, duration={self.duration})"
+
+    @property
+    def duration(self):
+        return self.t.shape[0] / SAMPLE_RATE
+
+    @duration.setter
+    def duration(self, value):
+        self.t = np.linspace(0, value, int(SAMPLE_RATE * value), endpoint=False)
 
     def white(self):
         """Generates white noise."""
-        return np.random.uniform(-1, 1, self.n_samples) * self.amp
+        return np.random.uniform(-1, 1, self.t.shape[0]) * self.amp
 
     def _colored_noise(self, alpha):
         """
@@ -25,10 +35,10 @@ class Noise:
         alpha=-2: Violet
         """
         # Generate white noise in frequency domain
-        white = np.fft.rfft(np.random.normal(0, 1, self.n_samples))
+        white = np.fft.rfft(np.random.normal(0, 1, self.t.shape[0]))
 
         # Calculate frequency bins
-        freqs = np.fft.rfftfreq(self.n_samples, d=1 / SAMPLE_RATE)
+        freqs = np.fft.rfftfreq(self.t.shape[0], d=1 / SAMPLE_RATE)
 
         # Avoid division by zero at DC (0 Hz)
         # We can set the first component to 0 or leave it as is (white noise DC)
@@ -43,7 +53,7 @@ class Noise:
         colored_spectrum = white * scaling
 
         # Transform back to time domain
-        colored_noise = np.fft.irfft(colored_spectrum, n=self.n_samples)
+        colored_noise = np.fft.irfft(colored_spectrum, n=self.t.shape[0])
 
         # Normalize to -1 to 1 range approx, then apply amp
         # Normalization can be tricky as random range varies.
@@ -54,7 +64,7 @@ class Noise:
 
         samples = colored_noise * self.amp
 
-        return amplitude_envelope(
+        return fade(
             samples,
             fade_in_ms=15,
             fade_out_ms=15,
