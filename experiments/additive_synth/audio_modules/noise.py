@@ -1,7 +1,9 @@
 import numpy as np
-from effects import amplitude_envelope
+from audio_modules.effects import amplitude_envelope
+from audio_modules.easings import EasingType
 
 SAMPLE_RATE = 48000
+
 
 class Noise:
     def __init__(self, amp: float = 1.0, duration: float = 1.0):
@@ -24,34 +26,41 @@ class Noise:
         """
         # Generate white noise in frequency domain
         white = np.fft.rfft(np.random.normal(0, 1, self.n_samples))
-        
+
         # Calculate frequency bins
-        freqs = np.fft.rfftfreq(self.n_samples, d=1/SAMPLE_RATE)
-        
+        freqs = np.fft.rfftfreq(self.n_samples, d=1 / SAMPLE_RATE)
+
         # Avoid division by zero at DC (0 Hz)
         # We can set the first component to 0 or leave it as is (white noise DC)
         # Usually colored noise is zero-mean, so let's zero out DC or scaling factor 1.
         # Standard approach: scale amplitudes by 1 / f^(alpha/2)
-        
+
         scaling = np.ones_like(freqs)
         # Only scale positive frequencies
         scaling[1:] = 1 / (freqs[1:] ** (alpha / 2))
-        
+
         # Apply scaling
         colored_spectrum = white * scaling
-        
+
         # Transform back to time domain
         colored_noise = np.fft.irfft(colored_spectrum, n=self.n_samples)
-        
+
         # Normalize to -1 to 1 range approx, then apply amp
-        # Normalization can be tricky as random range varies. 
+        # Normalization can be tricky as random range varies.
         # We'll normalize by max absolute value to ensure it stays within bounds.
         max_val = np.max(np.abs(colored_noise))
         if max_val > 0:
             colored_noise /= max_val
-            
+
         samples = colored_noise * self.amp
-        return amplitude_envelope(samples, fade_in_ms=15, fade_out_ms=15, easing="linear")
+
+        return amplitude_envelope(
+            samples,
+            fade_in_ms=15,
+            fade_out_ms=15,
+            ease_in="easeOutQuad",
+            ease_out="easeOutQuad",
+        )
 
     def pink(self):
         """Generates pink noise (1/f)."""

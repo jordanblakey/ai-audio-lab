@@ -1,5 +1,5 @@
 import numpy as np
-from effects import amplitude_envelope
+from audio_modules.effects import amplitude_envelope
 
 SAMPLE_RATE = 48000
 
@@ -13,7 +13,7 @@ class Wave:
 
     def sine(self):
         samples = self.amp * np.sin(2 * np.pi * (self.t * self.hz))
-        samples = amplitude_envelope(samples)
+        samples = amplitude_envelope(samples, ease_in="easeOutExpo", ease_out="easeOutExpo")
         return samples
 
     def triangle(self):
@@ -25,7 +25,7 @@ class Wave:
             n += 2
         gain = 10 ** (2 / 20)
         samples = samples * (8 / np.pi**2) * self.amp * gain
-        samples = amplitude_envelope(samples)
+        samples = amplitude_envelope(samples, ease_in="easeOutExpo", ease_out="easeOutExpo")
         return samples
 
     def square(self):
@@ -36,7 +36,7 @@ class Wave:
             n += 2
         gain = 10 ** (-15 / 20)
         samples = samples * (4 / np.pi) * self.amp * gain
-        samples = amplitude_envelope(samples)
+        samples = amplitude_envelope(samples, ease_in="easeOutExpo", ease_out="easeOutExpo")
         return samples
 
     def sawtooth(self):
@@ -47,7 +47,7 @@ class Wave:
             n += 1 
         gain = 10 ** (-12 / 20)
         samples = samples * (2 / np.pi) * self.amp * gain
-        samples = amplitude_envelope(samples)
+        samples = amplitude_envelope(samples, ease_in="easeOutExpo", ease_out="easeOutExpo")
         return samples
 
     def aliased_square(self):
