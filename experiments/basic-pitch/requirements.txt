@@ -24,7 +24,6 @@ librosa==0.11.0
 llvmlite==0.46.0
 markdown==3.10
 markupsafe==3.0.3
-midi2audio==0.1.1
 mido==1.3.3
 mir-eval==0.8.2
 ml-dtypes==0.2.0
@@ -41,7 +40,6 @@ protobuf==4.25.8
 pyasn1==0.6.1
 pyasn1-modules==0.4.2
 pycparser==2.23
-pyfluidsynth==1.3.4
 requests==2.32.5
 requests-oauthlib==2.0.0
 resampy==0.4.2

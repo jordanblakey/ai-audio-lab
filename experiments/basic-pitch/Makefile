@@ -4,17 +4,15 @@ install:
 	. .venv/bin/activate
 	uv pip install -r requirements.txt
 
-basic-pitch-inference:
-	. .venv/bin/activate
-	uv pip install -r requirements.txt
-	uv python basic_pitch_inference.py $(FILE)
 
 basic-pitch:
 	. .venv/bin/activate
-	uv pip install -r requirements.txt
 	basic-pitch . $(FILE)
+
+inference:
+	. .venv/bin/activate
+	python basic_pitch_inference.py $(FILE)
 
 play-midi:
 	. .venv/bin/activate
-	uv pip install -r requirements.txt
-	uv python play_midi.py $(FILE)
+	python play_midi.py $(FILE)

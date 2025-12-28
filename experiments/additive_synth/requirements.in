@@ -1,7 +1,6 @@
 pyaudio
 numpy
-librosa
 scipy
-
 onnxruntime-gpu
 kokoro-onnx
+sounddevice

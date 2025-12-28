@@ -1,6 +1,4 @@
 # basic-pitch . audio_sample.mp3
-
-
 import sys
 from basic_pitch.inference import predict, predict_and_save
 from basic_pitch import ICASSP_2022_MODEL_PATH
@@ -16,10 +14,11 @@ if len(args) != 2:
 # print(midi_data)
 # print(note_events)
 
+predict_and_save()
 
 predict_and_save(
     audio_path_list=[args[1]],
-    output_directory='.',
+    output_directory='./output',
     save_midi=True, 
     sonify_midi=True, 
     save_model_outputs=True, 

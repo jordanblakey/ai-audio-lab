@@ -1,10 +1,3 @@
-https://github.com/coqui-ai/TTS
-
-https://github.com/spotify/basic-pitch
-https://github.com/jiaaro/pydub
-https://github.com/spotify/pedalboard
-https://github.com/jiaaro/pydub
-
 
 
 ```

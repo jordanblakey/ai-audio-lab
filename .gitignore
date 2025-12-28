@@ -8,3 +8,6 @@ experiments/text_to_speech/generated_audio/
 
 kokoro-v*
 voices-v*.bin
+
+experiments/basic-pitch/output/*.wav
+experiments/basic-pitch/output/*.npz
