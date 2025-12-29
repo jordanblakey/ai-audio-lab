@@ -3,7 +3,7 @@ import numpy as np
 from audio_modules.easings import EASINGS, EasingType
 from scipy.signal import butter, lfilter
 
-SAMPLE_RATE = 48000
+SAMPLE_RATE = 192000
 
 def remove_dc_offset(samples: np.ndarray[np.float64]):
     return samples - np.mean(samples)

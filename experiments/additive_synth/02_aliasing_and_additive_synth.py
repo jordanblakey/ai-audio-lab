@@ -20,7 +20,7 @@ with Audio() as a:
 
     narrate("We can also generate the samples for triangle and sawtooth waves with numpy.")
     a.buffer.append(Wave(hz=440, amp=1.0, duration=1).triangle())
-    a.buffer.append(np.zeros(int(48000 / 2)))
+    a.buffer.append(np.zeros(int(192000 / 2)))
     a.buffer.append(Wave(hz=440, amp=1.0, duration=1).sawtooth())
     a.play_buffer()
     time.sleep(1)

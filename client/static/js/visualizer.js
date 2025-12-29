@@ -18,7 +18,7 @@ class AudioVisualizer {
         this.audioContext = null;
         this.animationId = null;
         this.isActive = false;
-        
+
         this.dpr = window.devicePixelRatio || 1;
         this.minFreq = 20;
         this.maxFreq = 20000;
@@ -36,16 +36,16 @@ class AudioVisualizer {
 
     start(stream, audioContext) {
         if (this.isActive) return;
-        
+
         console.log('Starting Visualizer...');
         this.audioContext = audioContext;
         this.analyser = this.audioContext.createAnalyser();
         const source = this.audioContext.createMediaStreamSource(stream);
         source.connect(this.analyser);
-        
+
         this.analyser.fftSize = 4096;
         this.analyser.smoothingTimeConstant = 0.6;
-        
+
         this.updateFreqBounds(this.audioContext.sampleRate);
         this.freqData = new Uint8Array(this.analyser.frequencyBinCount);
         this.timeDataFloat = new Float32Array(this.analyser.fftSize);
@@ -58,7 +58,7 @@ class AudioVisualizer {
     stop() {
         if (!this.isActive) return;
         console.log('Stopping Visualizer...');
-        
+
         if (this.animationId) {
             cancelAnimationFrame(this.animationId);
             this.animationId = null;
@@ -77,16 +77,16 @@ class AudioVisualizer {
 
     resizeCanvas() {
         this.dpr = window.devicePixelRatio || 1;
-        
+
         const setSize = (canvas, ctx) => {
             if (!canvas || !ctx) return;
             const rect = canvas.getBoundingClientRect();
             // If hidden or 0 size, skip
             if (rect.width === 0) return;
-            
+
             canvas.width = rect.width * this.dpr;
             canvas.height = rect.height * this.dpr;
-            ctx.setTransform(1, 0, 0, 1, 0, 0); 
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.scale(this.dpr, this.dpr);
         };
 
@@ -99,7 +99,7 @@ class AudioVisualizer {
     }
 
     updateFreqBounds(sampleRate) {
-        this.maxFreq = 20000; 
+        this.maxFreq = 20000;
         this.logMax = Math.log10(this.maxFreq);
         this.logRange = this.logMax - this.logMin;
     }
@@ -109,22 +109,22 @@ class AudioVisualizer {
         const index = freq * (dataArray.length) / nyquist;
         const i1 = Math.floor(index);
         const i2 = i1 + 1;
-        
+
         if (i1 >= dataArray.length) return 0;
-        
+
         const v1 = dataArray[i1];
         const v2 = (i2 < dataArray.length) ? dataArray[i2] : v1;
-        
+
         const t = index - i1;
         return v1 * (1 - t) + v2 * t;
     }
 
     getColor(value) {
         const p = value / 255;
-        if (p < 0.1) return `rgb(0,0,${Math.floor(p*10*255)})`;
-        if (p < 0.3) return `rgb(0,${Math.floor((p-0.1)*5*255)},255)`;
-        if (p < 0.6) return `rgb(0,255,${Math.floor((0.6-p)*3.33*255)})`;
-        return `rgb(255,${Math.floor((1-p)*2.5*255)},0)`;
+        if (p < 0.1) return `rgb(0,0,${Math.floor(p * 10 * 255)})`;
+        if (p < 0.3) return `rgb(0,${Math.floor((p - 0.1) * 5 * 255)},255)`;
+        if (p < 0.6) return `rgb(0,255,${Math.floor((0.6 - p) * 3.33 * 255)})`;
+        return `rgb(255,${Math.floor((1 - p) * 2.5 * 255)},0)`;
     }
 
     draw() {
@@ -143,10 +143,10 @@ class AudioVisualizer {
         this.renderWaveformFrame(this.timeDataFloat, timeBufferLength);
         this.renderSpectrumFrame(this.freqData, sampleRate);
         this.renderSpectrogramFrame(this.freqData, sampleRate);
-        
+
         this.drawFrequencyLabels(this.freqUiCtx, this.freqUiCanvas, sampleRate);
         this.drawFrequencyLabels(this.specUiCtx, this.specUiCanvas, sampleRate);
-        
+
         this.drawYAxisLabels(this.waveUiCtx, this.waveUiCanvas, 'amp');
         this.drawYAxisLabels(this.freqUiCtx, this.freqUiCanvas, 'db');
     }
@@ -155,33 +155,33 @@ class AudioVisualizer {
         if (!this.waveCanvas) return;
         const h = this.waveCanvas.height / this.dpr;
         const w = this.waveCanvas.width / this.dpr;
-        
+
         this.waveCtx.fillStyle = '#000';
         this.waveCtx.fillRect(0, 0, w, h);
         this.waveCtx.lineWidth = 1.5;
-        this.waveCtx.strokeStyle = '#00ff00'; 
+        this.waveCtx.strokeStyle = '#00ff00';
         this.waveCtx.beginPath();
 
         const plotLength = 1000;
         let offset = 0;
         let mean = 0;
 
-        const maxSearchWindow = 1600; 
+        const maxSearchWindow = 1600;
         const searchStart = Math.max(0, bufferLength - plotLength - maxSearchWindow);
         const searchEnd = bufferLength - plotLength;
-        
+
         let sum = 0;
         for (let i = searchStart; i < bufferLength; i++) sum += timeData[i];
         mean = sum / (bufferLength - searchStart);
-        
-        offset = searchEnd; 
+
+        offset = searchEnd;
         for (let i = searchEnd; i >= searchStart; i--) {
-            if (timeData[i] < mean && timeData[i+1] >= mean) {
+            if (timeData[i] < mean && timeData[i + 1] >= mean) {
                 offset = i;
-                break; 
+                break;
             }
         }
-        
+
         let peak = 0;
         for (let i = 0; i < plotLength; i++) {
             const amp = Math.abs(timeData[offset + i] - mean);
@@ -189,7 +189,7 @@ class AudioVisualizer {
         }
 
         const targetPeak = 0.8;
-        const maxGain = 20.0; 
+        const maxGain = 20.0;
         const gain = Math.min(maxGain, targetPeak / (peak || 0.01));
 
         const sliceWidth = w * 1.0 / plotLength;
@@ -197,12 +197,12 @@ class AudioVisualizer {
         this.waveCtx.beginPath();
         for (let i = 0; i < plotLength; i++) {
             const idx = offset + i;
-            const v = (timeData[idx] - mean) * gain; 
-            const y = (h / 2) + (v * (h / 2)); 
-            
+            const v = (timeData[idx] - mean) * gain;
+            const y = (h / 2) + (v * (h / 2));
+
             if (idx === offset) this.waveCtx.moveTo(x, y);
             else this.waveCtx.lineTo(x, y);
-            
+
             x += sliceWidth;
         }
         this.waveCtx.stroke();
@@ -221,7 +221,7 @@ class AudioVisualizer {
             const freq = Math.pow(10, logFreq);
             const value = this.getFreqData(freq, sampleRate, freqData);
             const barHeight = (value / 255) * h;
-            
+
             this.freqCtx.fillStyle = `hsl(${x / w * 300}, 100%, 50%)`;
             this.freqCtx.fillRect(x, h - barHeight, 1, barHeight);
         }
@@ -232,16 +232,16 @@ class AudioVisualizer {
         const h = this.specCanvas.height / this.dpr;
         const w = this.specCanvas.width / this.dpr;
 
-        this.specCtx.drawImage(this.specCanvas, 
-            0, 0, this.specCanvas.width, this.specCanvas.height - 1 * this.dpr, 
+        this.specCtx.drawImage(this.specCanvas,
+            0, 0, this.specCanvas.width, this.specCanvas.height - 1 * this.dpr,
             0, 1, w, h - 1
         );
 
-         for (let x = 0; x < w; x++) {
+        for (let x = 0; x < w; x++) {
             const logFreq = this.logMin + (x / w) * this.logRange;
             const freq = Math.pow(10, logFreq);
             const value = this.getFreqData(freq, sampleRate, freqData);
-            
+
             this.specCtx.fillStyle = this.getColor(value);
             this.specCtx.fillRect(x, 0, 1, 1);
         }
@@ -271,21 +271,21 @@ class AudioVisualizer {
         if (!ctx || !canvas) return;
         const h = canvas.height / this.dpr;
         const w = canvas.width / this.dpr;
-        
+
         ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
         ctx.font = '9px sans-serif';
         ctx.textAlign = 'right';
 
         if (type === 'amp') {
             ctx.fillText('1.0', w - 4, 10);
-            ctx.fillText('0.0', w - 4, h/2 + 4);
+            ctx.fillText('0.0', w - 4, h / 2 + 4);
             ctx.fillText('-1.0', w - 4, h - 4);
         } else if (type === 'db') {
             const max = (this.analyser) ? this.analyser.maxDecibels : -30;
             const min = (this.analyser) ? this.analyser.minDecibels : -100;
-            
+
             ctx.fillText(`${max}dB`, w - 4, 10);
-            ctx.fillText(`${Math.round((max+min)/2)}dB`, w - 4, h/2 + 4);
+            ctx.fillText(`${Math.round((max + min) / 2)}dB`, w - 4, h / 2 + 4);
             ctx.fillText(`${min}dB`, w - 4, h - 4);
         }
     }

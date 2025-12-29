@@ -6,7 +6,7 @@ import pyaudio
 # numpy.show_config()
 
 class Audio:
-    def __init__(self, sample_rate=48000, chunk_size=2048, channels=2):
+    def __init__(self, sample_rate=192000, chunk_size=2048, channels=2):
         self.p = pyaudio.PyAudio()
         self.sample_rate = sample_rate
         self.chunk_size = chunk_size

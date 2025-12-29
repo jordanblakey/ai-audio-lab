@@ -2,7 +2,7 @@ import numpy as np
 from audio_modules.effects import fade
 from audio_modules.easings import EasingType
 
-SAMPLE_RATE = 48000
+SAMPLE_RATE = 192000
 
 
 class Noise:

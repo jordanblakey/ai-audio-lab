@@ -9,9 +9,9 @@ class Recorder extends HTMLElement {
         this.audioUrl = null;
         this.recordings = [];
         this.recordingStartTime = null;
-        
+
         this.database = new RecorderDatabase();
-        
+
         // Modules
         this.waveform = null; // Legacy playback/recording waveform
         this.visualizer = new AudioVisualizer();
@@ -27,7 +27,7 @@ class Recorder extends HTMLElement {
         this.render();
         this.bindElements();
         this.bindEvents();
-        
+
         // Initialize waveform if script loaded
         const canvas = this.querySelector('#waveform-canvas');
         if (canvas && typeof WaveformDisplay !== 'undefined') {
@@ -35,11 +35,11 @@ class Recorder extends HTMLElement {
         }
 
         this.renderRecordingSelector();
-        
+
         // Auto-show visualizer
         this.toggleVisualizer();
     }
-        
+
     render() {
         this.innerHTML = `
         <div id="controls">
@@ -107,12 +107,12 @@ class Recorder extends HTMLElement {
         this.recordButton.addEventListener('click', () => this.record());
         this.streamButton.addEventListener('click', () => this.toggleStreaming());
         this.visualizerButton.addEventListener('click', () => this.toggleVisualizer());
-        
+
         this.infoButton.addEventListener('click', () => {
-             if (!this.recordingDetails) this.recordingDetails = new RecordingDetails(this);
-             this.recordingDetails.toggle();
+            if (!this.recordingDetails) this.recordingDetails = new RecordingDetails(this);
+            this.recordingDetails.toggle();
         });
-        
+
         this.clearAllButton.addEventListener('click', () => this.clearAll());
         this.playButton.addEventListener('click', () => this.play());
         this.saveButton.addEventListener('click', () => this.save());
@@ -140,7 +140,7 @@ class Recorder extends HTMLElement {
             if (this.audio) {
                 const duration = (Number.isFinite(this.audioDuration) ? this.audioDuration : this.audio.duration) || Infinity;
                 if (Number.isFinite(duration)) {
-                     this.audio.currentTime = Math.min(duration, this.audio.currentTime + (duration * 0.10));
+                    this.audio.currentTime = Math.min(duration, this.audio.currentTime + (duration * 0.10));
                 }
             }
         } else if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey) {
@@ -156,7 +156,7 @@ class Recorder extends HTMLElement {
             if (this.recordingSelector.value && !isCtrlS) {
                 e.preventDefault();
                 this.save();
-            } 
+            }
         } else if (e.key.toLowerCase() === 'i') {
             if (!this.recordingDetails) this.recordingDetails = new RecordingDetails(this);
             this.recordingDetails.toggle();
@@ -186,7 +186,7 @@ class Recorder extends HTMLElement {
 
         // Initialize AudioContext if needed
         if (!this.audioContext || this.audioContext.state === 'closed') {
-             this.audioContext = new AudioContext();
+            this.audioContext = new AudioContext();
         }
         if (this.audioContext.state === 'suspended') {
             await this.audioContext.resume();
@@ -231,7 +231,7 @@ class Recorder extends HTMLElement {
         } else {
             const stream = await this.getMicrophone();
             if (!stream) return;
-            
+
             await this.transcriber.start(stream, this.audioContext);
             this.isStreaming = true;
             this.streamButton.textContent = "Stop Transcribing";
@@ -247,7 +247,7 @@ class Recorder extends HTMLElement {
             this.visualizerButton.textContent = "Hide Visualizer";
             // Microphone keeps running if recording/transcribing, or if we consider PAUSED "using" it?
             // Actually PAUSED means we don't need new data.
-            this.checkMicrophoneUsage(); 
+            this.checkMicrophoneUsage();
         } else if (this.visualizerState === 'PAUSED') {
             // Go to HIDDEN
             this.visualizer.stop(); // Ensure stopped
@@ -282,7 +282,7 @@ class Recorder extends HTMLElement {
         if (!stream) return;
 
         this.recordButton.textContent = "⬛";
-        
+
         this.mediaRecorder = new MediaRecorder(stream);
         this.mediaRecorder.start(1000 / 60);
 
@@ -293,11 +293,11 @@ class Recorder extends HTMLElement {
         this.analyzer = this.audioContext.createAnalyser();
         this.analyzer.fftSize = 256;
         source.connect(this.analyzer);
-        
+
         if (this.waveform) {
             this.waveform.connect(this.analyzer);
         }
-        
+
         if (!this.recordingDetails) this.recordingDetails = new RecordingDetails(this);
 
         this.recordingStartTime = Date.now();
@@ -305,39 +305,39 @@ class Recorder extends HTMLElement {
             this.audioChunks.push(event.data);
             this.renderRecorderInfo();
             if (this.recordingDetails) {
-                 this.recordingDetails.update(stream, this.mediaRecorder, this.analyzer, this.recordingStartTime);
+                this.recordingDetails.update(stream, this.mediaRecorder, this.analyzer, this.recordingStartTime);
             }
         };
     }
 
     stopRecording() {
         if (!this.mediaRecorder) return;
-        
+
         this.mediaRecorder.onstop = async () => {
             if (this.audioChunks.length === 0) {
                 console.warn("No audio chunks recorded.");
                 return;
             }
-            
+
             const mimeType = this.mediaRecorder.mimeType || 'audio/webm';
             const audioBlob = new Blob(this.audioChunks, { type: mimeType });
             const timestamp = Date.now();
             await this.database.addRecording(audioBlob, timestamp);
             await this.renderRecordingSelector(timestamp, true);
-            
+
             // Clean up recorder-specific tracks/analyzer?
             // Actually, since we share 'stream', we should NOT stop tracks here if others are using it.
             // But 'getMicrophone' returns the shared stream.
             // If we stop tracks here, we break Streaming/Visualizer.
             // SO: WE MUST NOT CALL track.stop() HERE.
-            
+
             this.checkMicrophoneUsage();
             this.audioChunks = []; // Clean up AFTER saving
         };
 
         this.mediaRecorder.stop();
         // Specific cleanup for waveform/analyzer
-         if (this.waveform && this.waveform.isLive) {
+        if (this.waveform && this.waveform.isLive) {
             this.waveform.stopLoop();
         }
     }
@@ -348,15 +348,15 @@ class Recorder extends HTMLElement {
             this.recordingSelector.replaceChildren();
             this.recordingSelector.appendChild(new Option('Select a recording', ''));
             this.recordings.forEach(recording => {
-                const option = new Option(new Date(recording.id).toLocaleString(), recording.id);        
+                const option = new Option(new Date(recording.id).toLocaleString(), recording.id);
                 this.recordingSelector.appendChild(option);
             });
-            
+
             let targetId = activeId;
             if (!targetId && !this.recordingSelector.value) {
                 if (this.recordings.length > 0) targetId = this.recordings[0].id;
             }
-            
+
             if (targetId) {
                 await this.selectRecording(targetId, preserveDetails);
             } else {
@@ -379,8 +379,8 @@ class Recorder extends HTMLElement {
     async renderPlayerInfo() {
         let duration = this.audioDuration;
         if (!Number.isFinite(duration)) {
-             await this.getDuration();
-             duration = this.audio.duration;
+            await this.getDuration();
+            duration = this.audio.duration;
         }
         const current = this.formatTime(this.audio.currentTime);
         const total = this.formatTime(duration);
@@ -438,20 +438,20 @@ class Recorder extends HTMLElement {
         this.audioUrl && URL.revokeObjectURL(this.audioUrl);
         this.audioUrl = URL.createObjectURL(recording.blob);
         this.audio = new Audio(this.audioUrl);
-        
+
         if (this.waveform) {
             try {
-                const context = new AudioContext(); 
+                const context = new AudioContext();
                 const arrayBuffer = await recording.blob.arrayBuffer();
                 if (arrayBuffer.byteLength === 0) throw new Error("Empty audio buffer");
-                
+
                 const audioBuffer = await context.decodeAudioData(arrayBuffer);
                 this.waveform.load(audioBuffer);
                 this.waveform.bindAudio(this.audio);
                 this.audioDuration = audioBuffer.duration;
                 this.renderPlayerInfo();
                 this.audio.addEventListener('timeupdate', () => {
-                    if(this.audio.paused) this.renderPlayerInfo();
+                    if (this.audio.paused) this.renderPlayerInfo();
                 });
             } catch (err) {
                 console.error("Error loading audio for waveform:", err);
@@ -460,10 +460,10 @@ class Recorder extends HTMLElement {
             }
         }
     }
-    
+
     play() {
         if (!this.audio) return;
-        
+
         const updatePlayButton = event => {
             if (event || !this.audio.paused) {
                 this.audio.pause();
@@ -475,22 +475,22 @@ class Recorder extends HTMLElement {
                 this.renderPlayerInfo();
             }
         }
-        
+
         // Remove previous listener to avoid duplicates if play called multiple times?
         // Actually onended is a property, so it overwrites.
         this.audio.onended = updatePlayButton;
         updatePlayButton();
     }
-    
+
     save() {
         if (this.audioUrl) {
-           const a = document.createElement('a');
-           a.href = this.audioUrl;
-           const timestamp = this.recordingSelector.value || Date.now();
-           a.download = `recording-${timestamp}.webm`; 
-           document.body.appendChild(a);
-           a.click();
-           document.body.removeChild(a);
+            const a = document.createElement('a');
+            a.href = this.audioUrl;
+            const timestamp = this.recordingSelector.value || Date.now();
+            a.download = `recording-${timestamp}.webm`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
     }
 }

@@ -1,7 +1,7 @@
 import numpy as np
 from audio_modules.effects import fade
 
-SAMPLE_RATE = 48000
+SAMPLE_RATE = 192000
 
 class Wave:
     def __init__(self, hz: int, amp: float = 1.0, duration: float = 1.0, delay: float = 0.0):
