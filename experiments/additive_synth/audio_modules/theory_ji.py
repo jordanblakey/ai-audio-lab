@@ -153,12 +153,12 @@ def play_scale(scale: list[int], amp: float = 1.0, duration: float = 1.0, wave_t
         waves = []
         if ascending:
             for hz in scale:
-                waves.append(Wave(hz=hz, amp=amp, duration=duration))
-            waves.append(Wave(hz=(scale[0] * 2), amp=amp, duration=duration))
+                waves.append(Wave(hz=float(hz), amp=amp, duration=duration))
+            waves.append(Wave(hz=float(scale[0] * 2), amp=amp, duration=duration))
         else:
-            waves.append(Wave(hz=(scale[0] * 2), amp=amp, duration=duration))
+            waves.append(Wave(hz=float(scale[0] * 2), amp=amp, duration=duration))
             for hz in scale[::-1]:
-                waves.append(Wave(hz=hz, amp=amp, duration=duration))
+                waves.append(Wave(hz=float(hz), amp=amp, duration=duration))
 
         for i in range(len(waves)):
             if wave_type == 'sine':

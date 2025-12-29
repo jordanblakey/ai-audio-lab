@@ -30,7 +30,7 @@ with Audio() as a:
     )
     a.buffer.append(envelope_wave)
     a.play_buffer()
-    narrate("Basically, we can use the envelope to shape the attack and release of a sound.")
+    narrate("Basically, we can use the envelope to shape the attack and decay of a sound.")
     time.sleep(0.5)
 
     narrate("For example, we can create a synthesizer pad with a square wave, a long attack and a very long decay.")
